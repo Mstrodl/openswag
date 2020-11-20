@@ -1,0 +1,16 @@
+[
+  {
+    "modid": "openswag",
+    "name": "OpenSwag",
+    "description": "Swag swag swag swag swag open swag yeahhhh swag swag swag :)",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authors": ["Mary Strodl <ipadlover8322@gmail.com>"],
+    "credits": "",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
