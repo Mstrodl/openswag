@@ -33,11 +33,20 @@ public class DgramCardComponent extends BaseComponent {
     return new Object[] { socket };
   }
 
-  public class DgramSocket extends AbstractValue {
+  public static class DgramSocket extends AbstractValue {
     private final DgramCardComponent component;
     private final DatagramChannel socket;
 
+    // Userdata
+    @SuppressWarnings("unused")
+    public DgramSocket() {
+      super();
+      this.socket = null;
+      this.component = null;
+    }
+
     public DgramSocket(DgramCardComponent component) throws IOException {
+      super();
       this.socket = DatagramChannel.open(StandardProtocolFamily.INET);
       this.socket.bind(null);
       this.socket.configureBlocking(false);
@@ -46,6 +55,9 @@ public class DgramCardComponent extends BaseComponent {
 
     @Callback(doc = "function():string, number, string -- Returns ip, port, and data of received packet")
     public Object[] read(Context context, Arguments arguments) throws IOException {
+      if(this.socket == null) {
+        throw new IOException("socket was disconnected");
+      }
       ByteBuffer buffer = ByteBuffer.allocate(1024*1024);
       // No idea why this isn't already InetSocketAddress...
       InetSocketAddress socketAddress = (InetSocketAddress) socket.receive(buffer);
@@ -58,6 +70,9 @@ public class DgramCardComponent extends BaseComponent {
 
     @Callback(doc = "function(address:string, port:number, data:string) -- Sends packet to specified address")
     public Object[] write(Context context, Arguments arguments) throws IOException {
+      if(this.socket == null) {
+        throw new IOException("socket was disconnected");
+      }
       byte[] buf = arguments.checkString(2).getBytes();
       this.socket.send(ByteBuffer.wrap(buf), new InetSocketAddress(arguments.checkString(0), arguments.checkInteger(1)));
       return null;
@@ -76,12 +91,16 @@ public class DgramCardComponent extends BaseComponent {
     }
 
     private void close() {
-      try {
-        this.socket.close();
-      } catch (IOException e) {
-        e.printStackTrace();
+      if(this.socket != null) {
+        try {
+          this.socket.close();
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
       }
-      component.connections.remove(this);
+      if(this.component != null) {
+        component.connections.remove(this);
+      }
     }
   }
 }
