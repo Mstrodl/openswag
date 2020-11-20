@@ -76,8 +76,6 @@ public class BaseComponent extends TileEntity implements ITickable, ManagedEnvir
     if (!isUpgrade) // dont write TileData for Upgrades/Cards
       nbt = super.writeToNBT(nbt);
 
-    OpenSwag.logger.info("Node: " + node());
-    if(node() != null) OpenSwag.logger.info("Node Host: " + node().host() + " this: " + this);
     if (node() != null && node().host() == this) {
       NBTTagCompound nodeNbt = new NBTTagCompound();
       node().save(nodeNbt);
@@ -153,7 +151,6 @@ public class BaseComponent extends TileEntity implements ITickable, ManagedEnvir
   // methods used for upgrades
 
   public void setupNode() {
-    OpenSwag.logger.info("Setting up node for " + this.getComponentName());
     if (this.node() == null) {
       this.node = API.network.newNode(this, Visibility.Neighbors).withConnector().withComponent(this.getComponentName()).create();
     }

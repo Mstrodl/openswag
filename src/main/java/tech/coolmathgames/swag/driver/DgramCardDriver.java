@@ -14,7 +14,6 @@ public class DgramCardDriver extends DriverItem {
 
   public DgramCardDriver() {
     super(ItemDgramCard.DEFAULTSTACK);
-    OpenSwag.logger.info("Added Dgram Item to DgramCardDriver: " + ItemDgramCard.DEFAULTSTACK);
   }
 
   @Override

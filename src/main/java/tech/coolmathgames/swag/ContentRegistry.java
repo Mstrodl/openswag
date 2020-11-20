@@ -39,14 +39,12 @@ public class ContentRegistry {
   }
 
   public static void init() {
-    OpenSwag.logger.warn("Adding drivers");
     Driver.add(HumorCardDriver.driver);
     Driver.add(DgramCardDriver.driver);
   }
 
   @SubscribeEvent
   public static void addItems(RegistryEvent.Register<Item> event) {
-    OpenSwag.logger.warn("Registering items");
     for(ItemStack itemStack : modItems) {
       event.getRegistry().register(itemStack.getItem());
     }
