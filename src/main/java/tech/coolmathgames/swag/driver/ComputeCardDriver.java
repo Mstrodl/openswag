@@ -5,14 +5,14 @@ import li.cil.oc.api.network.EnvironmentHost;
 import li.cil.oc.api.network.ManagedEnvironment;
 import li.cil.oc.api.prefab.DriverItem;
 import net.minecraft.item.ItemStack;
-import tech.coolmathgames.swag.component.HumorCardComponent;
-import tech.coolmathgames.swag.item.ItemHumorCard;
+import tech.coolmathgames.swag.component.ComputeCardComponent;
+import tech.coolmathgames.swag.item.ItemComputeCard;
 
-public class HumorCardDriver extends DriverItem {
-  public static HumorCardDriver driver = new HumorCardDriver();
+public class ComputeCardDriver extends DriverItem {
+  public static ComputeCardDriver driver = new ComputeCardDriver();
 
-  public HumorCardDriver() {
-    super(ItemHumorCard.DEFAULTSTACK);
+  public ComputeCardDriver() {
+    super(ItemComputeCard.DEFAULTSTACK);
   }
 
   @Override
@@ -20,7 +20,7 @@ public class HumorCardDriver extends DriverItem {
     if(environmentHost.world() != null && environmentHost.world().isRemote) {
       return null;
     } else {
-      return new HumorCardComponent(environmentHost);
+      return new ComputeCardComponent(environmentHost);
     }
   }
 

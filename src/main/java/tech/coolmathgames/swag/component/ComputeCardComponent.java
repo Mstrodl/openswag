@@ -15,16 +15,21 @@ import java.nio.channels.DatagramChannel;
 import java.util.HashSet;
 import java.util.Set;
 
-public class DgramCardComponent extends BaseComponent {
+public class ComputeCardComponent extends BaseComponent {
   public final Set<DgramSocket> connections = new HashSet<DgramSocket>();
 
-  public DgramCardComponent(EnvironmentHost host) {
-    super("swag_dgram", host);
+  public ComputeCardComponent(EnvironmentHost host) {
+    super("compute_card", host);
     node = Network.newNode(this, Visibility.Network).withComponent(getComponentName()).withConnector(32).create();
   }
 
+  @Callback(doc = "function():number; Gets the current real-world time in seconds since the Unix epoch")
+  public Object[] time(Context context, Arguments args) {
+    return new Object[] {System.currentTimeMillis() / 1000.0};
+  }
+
   @Callback(doc = "function():userdata -- Creates a Dgram socket")
-  public Object[] open(Context context, Arguments arguments) throws IOException {
+  public Object[] openDgram(Context context, Arguments arguments) throws IOException {
     if(connections.size() > 5) {
       throw new IOException("Too many Dgram sockets open!");
     }
@@ -34,8 +39,8 @@ public class DgramCardComponent extends BaseComponent {
   }
 
   public static class DgramSocket extends AbstractValue {
-    private final DgramCardComponent component;
-    private final DatagramChannel socket;
+    private ComputeCardComponent component;
+    private DatagramChannel socket;
 
     // Userdata
     @SuppressWarnings("unused")
@@ -45,7 +50,7 @@ public class DgramCardComponent extends BaseComponent {
       this.component = null;
     }
 
-    public DgramSocket(DgramCardComponent component) throws IOException {
+    public DgramSocket(ComputeCardComponent component) throws IOException {
       super();
       this.socket = DatagramChannel.open(StandardProtocolFamily.INET);
       this.socket.bind(null);
@@ -101,6 +106,8 @@ public class DgramCardComponent extends BaseComponent {
       if(this.component != null) {
         component.connections.remove(this);
       }
+      this.component = null;
+      this.socket = null;
     }
   }
 }
