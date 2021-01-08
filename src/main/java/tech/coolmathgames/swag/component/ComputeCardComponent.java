@@ -100,14 +100,32 @@ public class ComputeCardComponent extends BaseComponent {
         throw new IOException("socket was closed");
       }
 
-      this.socket.write(ByteBuffer.wrap(arguments.checkString(0).getBytes()));
-      return new Object[] {};
+      ByteBuffer byteBuffer = ByteBuffer.wrap(arguments.checkByteArray(0));
+      // For some reason OpenJDK doesn't write all at once?
+      while(byteBuffer.hasRemaining() && this.socket.write(byteBuffer) != 0);
+      return new Object[] {null};
+    }
+
+    @Callback(doc = "function():string, number, string -- Gets remote address, port, and canonical hostname")
+    public Object[] getAddress(Context context, Arguments argument) throws IOException {
+      if(this.socket == null || !this.socket.isOpen()) {
+        throw new IOException("socket was closed");
+      }
+      InetSocketAddress socketAddress = (InetSocketAddress) this.socket.getRemoteAddress();
+      if(socketAddress == null) {
+        return null;
+      }
+      return new Object[] {
+        socketAddress.getAddress().getHostAddress(),
+        socketAddress.getPort(),
+        socketAddress.getAddress().getCanonicalHostName()
+      };
     }
 
     @Callback(doc = "function() -- Close")
     public Object[] close(Context context, Arguments arguments) {
       this.close();
-      return new Object[] {};
+      return new Object[] {null};
     }
 
     @Override
@@ -168,7 +186,7 @@ public class ComputeCardComponent extends BaseComponent {
       if(this.socket != null && this.socket.isOpen()) {
         this.close();
       }
-      return new Object[] {};
+      return new Object[] {null};
     }
 
     @Override
