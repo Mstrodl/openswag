@@ -54,9 +54,9 @@ public class ComputeCardComponent extends BaseComponent {
   }
 
   public static class TCPSocket extends AbstractValue {
-    private final SocketChannel socket;
-    private final ComputeCardComponent component;
-    private final TCPServer server;
+    private SocketChannel socket;
+    private ComputeCardComponent component;
+    private TCPServer server;
 
     @SuppressWarnings("unused")
     public TCPSocket() {
@@ -106,6 +106,17 @@ public class ComputeCardComponent extends BaseComponent {
 
     @Callback(doc = "function() -- Close")
     public Object[] close(Context context, Arguments arguments) {
+      this.close();
+      return new Object[] {};
+    }
+
+    @Override
+    public void dispose(Context context) {
+      super.dispose(context);
+      this.close();
+    }
+
+    private void close() {
       if(this.socket != null && this.socket.isOpen()) {
         try {
           this.socket.close();
@@ -113,7 +124,9 @@ public class ComputeCardComponent extends BaseComponent {
           e.printStackTrace();
         }
       }
-      return new Object[] {};
+      this.socket = null;
+      this.server = null;
+      this.component = null;
     }
   }
 
