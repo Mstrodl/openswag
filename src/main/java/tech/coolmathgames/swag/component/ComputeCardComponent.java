@@ -12,11 +12,16 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class ComputeCardComponent extends BaseComponent {
   public final Set<DgramSocket> connections = new HashSet<DgramSocket>();
+  public final Set<TCPServer> tcpConnections = new HashSet<TCPServer>();
 
   public ComputeCardComponent(EnvironmentHost host) {
     super("compute_card", host);
@@ -36,6 +41,143 @@ public class ComputeCardComponent extends BaseComponent {
     DgramSocket socket = new DgramSocket(this);
     connections.add(socket);
     return new Object[] { socket };
+  }
+
+  @Callback(doc = "function(port:number):userdata -- Binds to a TCP port")
+  public Object[] bind(Context context, Arguments arguments) throws IOException {
+    if(tcpConnections.size() > 5) {
+      throw new IOException("Too many TCP ports bound!");
+    }
+    TCPServer socket = new TCPServer(this, arguments.checkInteger(0));
+    tcpConnections.add(socket);
+    return new Object[] { socket };
+  }
+
+  public static class TCPSocket extends AbstractValue {
+    private final SocketChannel socket;
+    private final ComputeCardComponent component;
+    private final TCPServer server;
+
+    @SuppressWarnings("unused")
+    public TCPSocket() {
+      super();
+      this.socket = null;
+      this.server = null;
+      this.component = null;
+    }
+
+    public TCPSocket(ComputeCardComponent component, TCPServer server, SocketChannel socket) throws IOException {
+      super();
+      this.socket = socket;
+      this.server = server;
+      this.component = component;
+      this.socket.configureBlocking(false);
+    }
+
+    @Callback(doc = "function(amount:number):string -- Reads specified number of bytes into a string. Returns empty string if not enough queued bytes")
+    public Object[] read(Context context, Arguments arguments) throws IOException {
+      if(this.socket == null || !this.socket.isOpen()) {
+        throw new IOException("socket was closed");
+      }
+
+      int length = arguments.checkInteger(0);
+      ByteBuffer buffer = ByteBuffer.allocate(length);
+      int offset = 0;
+      while(offset < length) {
+        long read = this.socket.read(buffer);
+        offset += read;
+        // Out of bytes to read
+        if(read < 16384) {
+          break;
+        }
+      }
+      return new Object[] {new String(buffer.array(), 0, offset, StandardCharsets.UTF_8)};
+    }
+
+    @Callback(doc = "function(data:string) -- Write bytes to socket")
+    public Object[] write(Context context, Arguments arguments) throws IOException {
+      if(this.socket == null || !this.socket.isOpen()) {
+        throw new IOException("socket was closed");
+      }
+
+      this.socket.write(ByteBuffer.wrap(arguments.checkString(0).getBytes()));
+      return new Object[] {};
+    }
+
+    @Callback(doc = "function() -- Close")
+    public Object[] close(Context context, Arguments arguments) {
+      if(this.socket != null && this.socket.isOpen()) {
+        try {
+          this.socket.close();
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
+      return new Object[] {};
+    }
+  }
+
+  public static class TCPServer extends AbstractValue {
+    private ComputeCardComponent component;
+    private ServerSocketChannel socket;
+
+    // Userdata
+    @SuppressWarnings("unused")
+    public TCPServer() {
+      super();
+      this.socket = null;
+      this.component = null;
+    }
+
+    public TCPServer(ComputeCardComponent component, int port) throws IOException {
+      super();
+      this.socket = ServerSocketChannel.open();
+      this.socket.bind(new InetSocketAddress(Inet4Address.getByAddress(new byte[]{0,0,0,0}), port));
+      this.socket.configureBlocking(false);
+      this.component = component;
+    }
+
+    @Callback(doc = "function():userdata -- Returns TCP client if available")
+    public Object[] accept(Context context, Arguments arguments) throws IOException {
+      if(this.socket == null || !this.socket.isOpen()) {
+        throw new IOException("server was closed");
+      }
+      SocketChannel client = this.socket.accept();
+      if(client == null) {
+        return null;
+      }
+      TCPSocket socket = new TCPSocket(this.component, this, client);
+      return new Object[] { socket };
+    }
+
+    @Callback(doc = "function() -- Closes socket")
+    public Object[] close(Context context, Arguments arguments) {
+      if(this.socket != null && this.socket.isOpen()) {
+        this.close();
+      }
+      return new Object[] {};
+    }
+
+    @Override
+    public void dispose(Context context) {
+      super.dispose(context);
+      this.close();
+    }
+
+    private void close() {
+      if(this.socket != null) {
+        try {
+          this.socket.close();
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
+      if(this.component != null) {
+        component.tcpConnections.remove(this);
+      }
+      this.component = null;
+      this.socket = null;
+    }
   }
 
   public static class DgramSocket extends AbstractValue {
