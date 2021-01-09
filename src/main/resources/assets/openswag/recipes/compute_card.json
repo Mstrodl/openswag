@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["cCc"],
+  "key": {
+    "c": {
+      "item": "opencomputers:card",
+      "data": 6
+    },
+    "C": {
+      "item": "minecraft:clock",
+      "data": 0
+    }
+  },
+  "result": {
+    "item": "openswag:compute_card",
+    "count": 1,
+    "data": 0
+  }
+}

@@ -16,7 +16,6 @@ import li.cil.oc.api.Driver;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 import tech.coolmathgames.swag.driver.ComputeCardDriver;
-import tech.coolmathgames.swag.item.BlockCardBox;
 import tech.coolmathgames.swag.item.ItemComputeCard;
 
 import javax.annotation.Nonnull;
