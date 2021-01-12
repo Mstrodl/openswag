@@ -15,6 +15,7 @@ import java.nio.channels.DatagramChannel;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -82,16 +83,14 @@ public class ComputeCardComponent extends BaseComponent {
 
       int length = arguments.checkInteger(0);
       ByteBuffer buffer = ByteBuffer.allocate(length);
-      int offset = 0;
-      while(offset < length) {
+      while(buffer.hasRemaining()) {
         long read = this.socket.read(buffer);
-        offset += read;
         // Out of bytes to read
         if(read < 16384) {
           break;
         }
       }
-      return new Object[] {new String(buffer.array(), 0, offset, StandardCharsets.UTF_8)};
+      return new Object[] {Arrays.copyOfRange(buffer.array(), 0, buffer.position())};
     }
 
     @Callback(doc = "function(data:string) -- Write bytes to socket")
@@ -242,7 +241,7 @@ public class ComputeCardComponent extends BaseComponent {
       if(socketAddress == null) {
         return null;
       }
-      String received = new String(buffer.array(), 0, buffer.position());
+      byte[] received = Arrays.copyOfRange(buffer.array(), 0, buffer.position());
       return new Object[] {socketAddress.getAddress(), socketAddress.getPort(), received};
     }
 
