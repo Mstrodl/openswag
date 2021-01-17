@@ -2,16 +2,28 @@ buildscript {
     repositories {
         jcenter()
         maven { url = "http://files.minecraftforge.net/maven" }
+        if(project.mixin == "true") {
+            maven {
+                name = 'sponge'
+                url = 'https://repo.spongepowered.org/maven'
+            }
+        }
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
         classpath 'com.palominolabs.gradle.task:gradle-git-clone-task:0.0.3'
+        if(project.mixin == "true") {
+            classpath 'org.spongepowered:mixingradle:0.6-SNAPSHOT'
+        }
     }
 }
-plugins {
-  id "com.matthewprenger.cursegradle" version "1.0.7"
-}
+//plugins {
+//  id "com.matthewprenger.cursegradle" version "1.0.7"
+//}
 apply plugin: 'net.minecraftforge.gradle.forge'
+if (project.mixin == "true") {
+    apply plugin: 'org.spongepowered.mixin'
+}
 //Only edit below this line, the above code adds and enables the nessasary things for Forge to be setup.
 
 
@@ -63,27 +75,51 @@ repositories {
         name = "CurseForge"
         url = "https://minecraft.curseforge.com/api/maven/"
     }
+    if (project.mixin == "true") {
+        maven {
+            name = "sponge"
+            url = "https://repo.spongepowered.org/maven"
+        }
+    }
 }
 
 dependencies {
-    deobfCompile "li.cil.oc:OpenComputers:${openComputersVersion}"
+    //deobfCompile "li.cil.oc:OpenComputers:${openComputersVersion}"
+    compile files("../OpenComputers/build/libs/OpenComputers-${openComputersVersion}${openComputersHash}.jar")
+
+    if (project.mixin == "true") {
+        provided("org.spongepowered:mixin:0.7.11-SNAPSHOT") {
+            exclude module: "launchwrapper"
+            exclude module: "guava"
+            exclude module: "gson"
+            exclude module: "commons-io"
+            exclude module: "log4j-core"
+        }
+    }
 
     compile fileTree(include: ['*.jar'], dir: 'libs')
 }
 
-if (project.hasProperty('curseforge_key')) {
-	curseforge_key = project.curseforge_key
-	curse_changelog = project.promochangelog
+if(project.mixin == "true") {
+    mixin {
+        defaultObfuscationEnv searge
+        add sourceSets.main, "mixins.openswag.refmap.json"
+    }
 }
 
-curseforge {
-	apiKey = curseforge_key
-	project {
-		id = curse_projectId
-		releaseType = curse_releaseType
-		changelog = file('changelog.txt')
-	}
-}
+//if (project.hasProperty('curseforge_key')) {
+//	curseforge_key = project.curseforge_key
+//	curse_changelog = project.promochangelog
+//}
+
+//curseforge {
+//	apiKey = curseforge_key
+//	project {
+//		id = curse_projectId
+//		releaseType = curse_releaseType
+//		changelog = file('changelog.txt')
+//	}
+//}
 
 processResources
 {
@@ -109,8 +145,21 @@ jar {
     classifier = buildNumber
 
     manifest { attributes(
-            "FMLCorePluginContainsFMLMod": "icanhazfmlmodpweeze"
+            'FMLCorePluginContainsFMLMod': 'icanhazfmlmodpweeze',
     ) }
+
+    if(project.mixin == "true") {
+        manifest.attributes(
+            'MixinConfigs': 'mixins.openswag.json',
+            'TweakOrder': "0",
+            'TweakClass': 'tech.coolmathgames.swag.tweaker.MixinLoadingTweaker',
+            'ForceLoadAsMod': true,
+        )
+        // this packs dependencies into the jar, theres prob a better way, esp if you have multiple dependencies (i guess see shadowing part of vanillafix's gradle file)
+        from(configurations.provided.asFileTree.files.collect { it.isDirectory() ? it : zipTree(it) }) {
+            exclude "LICENSE.txt", "META-INF/*.txt", "META-INF/MANIFSET.MF", "META-INF/maven/**", "META-INF/*.RSA", "META-INF/*.SF"
+        }
+    }
 }
 
 task devJar(type: Jar) {

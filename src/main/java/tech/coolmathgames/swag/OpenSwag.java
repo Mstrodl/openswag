@@ -5,6 +5,7 @@ import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.Mod.Instance;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -28,5 +29,6 @@ public class OpenSwag {
   @EventHandler
   public void init(FMLInitializationEvent event) {
     ContentRegistry.init();
+    NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandler());
   }
 }

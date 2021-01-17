@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["CcC", " n "],
+  "key": {
+    "c": {
+      "item": "opencomputers:case2",
+      "data": 0
+    },
+    "C": {
+      "item": "opencomputers:component",
+      "data": 5
+    },
+    "n": {
+      "item": "opencomputers:card",
+      "data": 6
+    }
+  },
+  "result": {
+    "item": "openswag:card_box",
+    "count": 1,
+    "data": 0
+  }
+}

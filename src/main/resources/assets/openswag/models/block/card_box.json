@@ -1,0 +1,11 @@
+{
+  "parent": "block/cube",
+  "textures": {
+    "down": "openswag:blocks/card_box_0",
+    "up": "openswag:blocks/card_box_1",
+    "north": "openswag:blocks/card_box_2",
+    "south": "openswag:blocks/card_box_3",
+    "west": "openswag:blocks/card_box_4",
+    "east": "openswag:blocks/card_box_5"
+  }
+}

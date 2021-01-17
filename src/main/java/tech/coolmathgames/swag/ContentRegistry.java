@@ -3,7 +3,9 @@ package tech.coolmathgames.swag;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.init.Items;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
@@ -15,7 +17,10 @@ import net.minecraftforge.fml.common.Mod;
 import li.cil.oc.api.Driver;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.GameRegistry;
+import tech.coolmathgames.swag.component.CardBoxDriver;
 import tech.coolmathgames.swag.driver.ComputeCardDriver;
+import tech.coolmathgames.swag.item.BaseBlock;
+import tech.coolmathgames.swag.item.BlockCardBox;
 import tech.coolmathgames.swag.item.ItemComputeCard;
 
 import javax.annotation.Nonnull;
@@ -34,11 +39,17 @@ public class ContentRegistry {
   };
 
   public static final HashSet<ItemStack> modItems = new HashSet<>();
-  public static final HashSet<Block> modBlocks = new HashSet<>();
+  public static final HashSet<BaseBlock> modBlocks = new HashSet<>();
 
   static {
     modItems.add(ItemComputeCard.DEFAULTSTACK = new ItemStack(new ItemComputeCard()));
-//    modBlocks.add(BlockCardBox.DEFAULTITEM = new BlockCardBox());
+    modBlocks.add(BlockCardBox.DEFAULTITEM = new BlockCardBox());
+
+    // Add items for each block
+    for(BaseBlock block : modBlocks) {
+      Item item = new ItemBlock(block).setRegistryName(block.getRegistryName());
+      modItems.add(new ItemStack(item));
+    }
   }
 
   public static void init() {
@@ -54,20 +65,17 @@ public class ContentRegistry {
 
   @SubscribeEvent
   public static void addBlocks(RegistryEvent.Register<Block> event) {
-    for(Block block : modBlocks) {
+    for(BaseBlock block : modBlocks) {
       event.getRegistry().register(block);
     }
+    registerTileEntity(CardBoxDriver.class, BlockCardBox.NAME);
   }
-
   @SubscribeEvent
   public static void registerRenders(ModelRegistryEvent event) {
     for(ItemStack itemStack : modItems) {
       Item item = itemStack.getItem();
       ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(item.getRegistryName().toString()));
     }
-//    for(Block block : modBlocks) {
-//      ModelLoader.setCustomModelResourceLocation(block.DEFAULTITEM, 0, new ModelResourceLocation(block.DEFAULTITEM.getRegistryName().toString()));
-//    }
   }
 
   private static void registerTileEntity(Class<? extends TileEntity> tileEntityClass, String key) {
