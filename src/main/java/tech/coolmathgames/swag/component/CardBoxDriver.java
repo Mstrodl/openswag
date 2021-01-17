@@ -19,6 +19,8 @@ import net.minecraft.util.ITickable;
 import net.minecraft.util.NonNullList;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 import tech.coolmathgames.swag.OpenSwag;
 import tech.coolmathgames.swag.driver.ContainerCardBox;
 import tech.coolmathgames.swag.item.BlockCardBox;
@@ -196,6 +198,9 @@ public class CardBoxDriver extends TileEntityLockableLoot implements SidedEnviro
   }
 
   public ManagedEnvironment onItemAdded(int index, ItemStack stack) {
+    if (this.getWorld().isRemote) {
+      return null;
+    }
     ManagedEnvironment component = this.components.get(index);
     if(component != null) {
       component.node().remove();
@@ -207,6 +212,10 @@ public class CardBoxDriver extends TileEntityLockableLoot implements SidedEnviro
       if(component != null) {
         component.load(this.getTag(driver, stack));
 
+        if(component.node() == null) {
+          System.out.println("Why is component.node() nul?! " + component.toString() + " node is " + component.node());
+        }
+        assert(component.node() != null);
         if (component.node().network() == null) {
           Network.joinOrCreateNetwork(this);
         }
