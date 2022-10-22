@@ -15,9 +15,7 @@ import java.nio.channels.DatagramChannel;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class ComputeCardComponent extends BaseComponent {
@@ -129,8 +127,8 @@ public class ComputeCardComponent extends BaseComponent {
 
     @Override
     public void dispose(Context context) {
-      super.dispose(context);
       this.close();
+      super.dispose(context);
     }
 
     private void close() {
@@ -150,6 +148,7 @@ public class ComputeCardComponent extends BaseComponent {
   public static class TCPServer extends AbstractValue {
     private ComputeCardComponent component;
     private ServerSocketChannel socket;
+    private List<TCPSocket> sockets;
 
     // Userdata
     @SuppressWarnings("unused")
@@ -157,6 +156,7 @@ public class ComputeCardComponent extends BaseComponent {
       super();
       this.socket = null;
       this.component = null;
+      this.sockets = new ArrayList<>();
     }
 
     public TCPServer(ComputeCardComponent component, int port) throws IOException {
@@ -165,6 +165,7 @@ public class ComputeCardComponent extends BaseComponent {
       this.socket.bind(new InetSocketAddress(Inet4Address.getByAddress(new byte[]{0,0,0,0}), port));
       this.socket.configureBlocking(false);
       this.component = component;
+      this.sockets = new ArrayList<>();
     }
 
     @Callback(doc = "function():userdata -- Returns TCP client if available")
@@ -177,21 +178,26 @@ public class ComputeCardComponent extends BaseComponent {
         return null;
       }
       TCPSocket socket = new TCPSocket(this.component, this, client);
+      this.sockets.add(socket);
       return new Object[] { socket };
     }
 
-    @Callback(doc = "function() -- Closes socket")
+    @Callback(doc = "function() -- Closes server")
     public Object[] close(Context context, Arguments arguments) {
       if(this.socket != null && this.socket.isOpen()) {
         this.close();
+      }
+      for(TCPSocket socket : sockets) {
+        socket.close();
+        socket.dispose(context);
       }
       return new Object[] {null};
     }
 
     @Override
     public void dispose(Context context) {
-      super.dispose(context);
       this.close();
+      super.dispose(context);
     }
 
     private void close() {
@@ -203,7 +209,7 @@ public class ComputeCardComponent extends BaseComponent {
         }
       }
       if(this.component != null) {
-        component.tcpConnections.remove(this);
+        this.component.tcpConnections.remove(this);
       }
       this.component = null;
       this.socket = null;
